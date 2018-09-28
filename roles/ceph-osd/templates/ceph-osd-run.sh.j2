@@ -52,19 +52,10 @@ function expose_partitions {
     exit 1
   fi
 }
-{% endif -%}
-{% endif -%}
 
 expose_partitions "$1"
 
-{% if osd_scenario == 'lvm' -%}
-function find_device_from_id {
-  OSD_ID="$1"
-  LV=$(docker run --privileged=true -v /dev:/dev -v /run/lvm/lvmetad.socket:/run/lvm/lvmetad.socket -v /etc/ceph:/etc/ceph:z --entrypoint=ceph-volume {{ ceph_docker_registry}}/{{ ceph_docker_image }}:{{ ceph_docker_image_tag }} lvm list --format json | python -c "import sys, json; print(json.load(sys.stdin)[\"$OSD_ID\"][0][\"path\"])")
-  OSD_DEVICE=$(lvdisplay -m $LV | awk '/Physical volume/ {print $3}')
-}
-
-find_device_from_id $@
+{% endif -%}
 {% endif -%}
 
 
@@ -126,7 +117,7 @@ find_device_from_id $@
   {% if osd_scenario == 'lvm' -%}
   -v /run/lvm/lvmetad.socket:/run/lvm/lvmetad.socket \
   -e CEPH_DAEMON=OSD_CEPH_VOLUME_ACTIVATE \
-  -e OSD_DEVICE="$OSD_DEVICE" \
+  -e OSD_ID="$OSD_ID" \
   --name=ceph-osd-"$OSD_ID" \
   {% else -%}
   -e CEPH_DAEMON=OSD_CEPH_DISK_ACTIVATE \
